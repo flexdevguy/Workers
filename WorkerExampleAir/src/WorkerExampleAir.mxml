@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx"  creationComplete="application1_creationCompleteHandler(event)"
+					   >
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			import spark.components.Alert;
+			
+			import components.MyComponent;
+			
+			private var myFirstWorker:Worker;
+			private var workerToMain:MessageChannel;
+			private var mainToWorker:MessageChannel;
+			
+			protected function createWorker_clickHandler(event:MouseEvent):void
+			{
+				myFirstWorker = WorkerDomain.current.createWorker(Workers.MyFirstWorker);
+				
+				mainToWorker = Worker.current.createMessageChannel(myFirstWorker);
+				workerToMain = myFirstWorker.createMessageChannel(Worker.current);
+				
+				myFirstWorker.setSharedProperty("mainToWorker", mainToWorker);
+				myFirstWorker.setSharedProperty("workerToMain", workerToMain);
+				
+				workerToMain.addEventListener(Event.CHANNEL_MESSAGE, onMessageFromWorker_Handler);
+				
+				trace("Component Array length :: "+MyComponent.myArray.length);
+				
+				myFirstWorker.start();
+			
+			}
+			
+			protected function application1_creationCompleteHandler(event:FlexEvent):void
+			{
+				trace(Capabilities.version);
+			}
+			
+			protected function onMessageFromWorker_Handler(event:Event):void
+			{
+				Alert.show(workerToMain.receive() as String);
+//				var obj:Object = workerToMain.receive() as Object;
+//				var arrColl:Array =  workerToMain.receive() as Array; 
+				
+				trace("Component Array length :: "+MyComponent.myArray.length);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:Button id="createWorker" label="Create Worker" click="createWorker_clickHandler(event)" horizontalCenter="0" verticalCenter="0"/> 
+</s:WindowedApplication>
